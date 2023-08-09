@@ -1,0 +1,47 @@
+﻿@model IEnumerable<MoviesAppProjectFSD.Models.DB.Actor>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ProfilePictureUrl)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FullName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Bio)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                <img class="rounded" src="@item.ProfilePictureUrl" alt="@item.FullName" style="max-height:150px ; max-width:150px" />
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FullName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Bio)
+            </td>
+            <td>
+                <a class="btn btn-outline-primary" ;class="bi bi-pencil-square" asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a class="btn btn-outline-info" ;class="bi bi-pencil-square" asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a class="btn btn-outline-danger" ;class="bi bi-pencil-square" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

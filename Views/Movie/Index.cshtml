@@ -1,0 +1,138 @@
+﻿@model IPagedList<MoviesAppProjectFSD.Models.DB.Movie>
+@using X.PagedList.Mvc.Core;
+@using X.PagedList;
+@using X.PagedList.Mvc.Core.Common;
+
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+
+
+
+
+<h1>Current Shows</h1>
+<form id="searchForm" action="/Movie/Index" method="get" autocomplete="off">
+    <p>
+        Search Movie:
+        <div>
+            <input type="text" id="searchString" name="searchString"
+                   autocomplete="off" onkeyup="XAjaxRequest(this.value);"
+                   style="width: 180px" />
+            <input type="submit" class="btn btn-outline-primary" value="Seach" />
+            <br />
+            <div id="autoSuggestContainer" style="position:absolute;display:none;z-index:100;">
+
+            </div>
+        </div>
+
+    </p>
+</form>
+<script type="text/javascript">
+    function XAjaxRequest(searchString) {
+        if (searchString.length < 1) {
+            //on deleting input to enter something else, needs clear
+            document.getElementById("autoSuggestContainer").innerHTML = "";
+            return;
+        }
+        //alert("testing searchString=" + searchString);
+        var xmlhttp;
+        xmlhttp = new XMLHttpRequest();
+        var url = "/Movie/IndexAJAX?searchString=" + searchString;
+        xmlhttp.open("GET", url, false); // open connection, GET is quick and simple, false: sync page will freeze
+        xmlhttp.send(); // send the request to IndexAJAX
+        document.getElementById("autoSuggestContainer").style.display = "block";
+        //2020-03-23 JPC need to clear out the container for a fresh auto-suggest list
+        //else the auto-suggest list can keep growing and growing with additional user keyups
+        document.getElementById("autoSuggestContainer").innerHTML = "";
+
+        var messageObject = JSON.parse(xmlhttp.responseText); // receive the respose text
+
+        var autoSuggestions = "";
+
+        for (var i = 0; i < messageObject.length; i++) {
+            //HTML code generation demo
+            //Works together with the ".innerHTML" statement after the end of this "for" block
+            autoSuggestions +=
+                "<input type=\"button\" value=\"" + messageObject[i].Name + "\" "
+                + "onclick=\"document.getElementById('searchString').value = this.value; document.getElementById('searchForm').submit();\" "
+                + "style =\"width: 280px\" />";
+            autoSuggestions += "<br />";
+        }
+        //place the generated buttons HTML code inside the display div
+        document.getElementById("autoSuggestContainer").innerHTML = autoSuggestions;
+    }
+</script>
+
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-4 col-xs-6 border-primary mb-3">
+            <div class="card mb-3" style="max-width: 540px;">
+                <div class="row g-0">
+                    <div class="col-md-12">
+                        <div class="card-header text-white bg-info">
+                            <p class="card-text">
+                                <h5 class="card-title">
+                                    @item.Name
+
+                                    @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                                    {
+                                        <a class="text-white float-right" asp-action="Edit" asp-route-id="@item.Id"> <i class="bi bi-pencil-square"></i></a>
+                                    }
+                                </h5>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <img src="@item.ImageUrl" width="90%" alt="@item.Name">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card-body">
+                            <p class="card-text">@item.Description</p>
+                            <p class="card-text"><b>Cinema: </b>@item.Cinema.Name</p>
+                            <p class="card-text"><b>Start Date: </b>@item.StartDate.ToString("dd MMM yy")</p>
+                            <p class="card-text"><b>End Date: </b>@item.EndDate.ToString("dd MMM yy")</p>
+                            <p class="card-text ">
+                                <b>Status: </b>
+                                @if (DateTime.Now >= item.StartDate && DateTime.Now <= item.EndDate)
+                                {
+                                    <span class="badge bg-success text-white">AVAILABLE</span> }
+                                else if (DateTime.Now > item.EndDate)
+                                {
+                                    <span class="badge bg-danger text-white">EXPIRED</span> }
+                                else
+                                {
+                                    <span class="badge bg-primary text-white">UPCOMING</span>}
+                            </p>
+
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="card-footer ">
+                            <p class="card-text">
+                                <a class="btn btn-outline-primary float-right" asp-action="Details" asp-route-id="@item.Id">
+                                    <i class="bi bi-eye-fill"> </i> Show Details
+                                </a>
+                                <a class="btn btn-success text-white"> <i class="bi bi-cart-plus"></i> Add to Cart (@item.Price.ToString("c")) </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>}
+</div>
+
+<!-- output a paging control that lets the user navigation to the previous page, next page, etc -->
+
+
+@Html.PagedListPager(Model, page => Url.Action("Index",
+        new { Page = page }),
+        new PagedListRenderOptions
+        {
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" }
+    })
+
